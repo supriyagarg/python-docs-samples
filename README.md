@@ -42,3 +42,5 @@ When adding a new directory, be sure to edit ``.coveragerc`` to include it in co
 ## Licensing
 
 * See [LICENSE](LICENSE)
+
+

@@ -35,7 +35,7 @@ before_install:
           fi
 
 install:
-        - pip install tox
+        - sudo pip install tox
 
 script:
         - tox

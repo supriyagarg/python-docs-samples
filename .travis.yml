@@ -34,8 +34,5 @@ before_install:
                 gcloud auth activate-service-account --key-file python-docs-samples.json;
           fi
 
-install:
-        - sudo pip install tox
-
 script:
         - tox

@@ -34,5 +34,9 @@ before_install:
                 gcloud auth activate-service-account --key-file python-docs-samples.json;
           fi
 
+install:
+        - pip install tox coveralls
+
 script:
         - tox
+

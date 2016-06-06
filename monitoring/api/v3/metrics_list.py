@@ -102,7 +102,7 @@ def get_path_prefix(g, s):
         else:
             prefix = 'custom.googleapis.com'
     else:
-        print >> sys.stderr, 'ERROR: group "{0}", service "{1}"'.format(g,s)
+        print >> sys.stderr, 'ERR: group "{0}", service "{1}"'.format(g,s)
     return prefix
 
 
@@ -147,12 +147,12 @@ def read_metric_descriptors(client, project_name, prefix, custom, timeseries):
         filter='metric.type=starts_with("{0}")'.format(prefix) if prefix else '')
     response = request.execute()
     if u'metricDescriptors' not in response:
-        print >> sys.stderr, 'FAILED TO LIST METRIC DESCRIPTORS'
+        print >> sys.stderr, 'ERR: FAILED metricDescriptors.list (AUTH?)'
         print >> sys.stderr, response
     descriptor_list = response[u'metricDescriptors']
     if u'nextPageToken' in response:
         # Log but ignore missing results. TODO: handle multiple batches
-        print >> sys.stderr, 'RESULTS ARE INCOMPLETE.'
+        print >> sys.stderr, 'ERR: DESCRIPTORS ARE INCOMPLETE.'
 
     count = 0
     for descr in descriptor_list:
@@ -196,7 +196,7 @@ def probe_time_series(client, project_name, metric_type):
         interval_endTime=get_now_rfc3339())
     response = request.execute()
     if u'nextPageToken' in response:
-        print >> sys.stderr, 'RESULTS ARE INCOMPLETE.'  # TODO: handle multiple batches
+        print >> sys.stderr, 'ERR: TIME SERIES INCOMPLETE.'  # TODO: handle multiple batches
     if u'timeSeries' not in response:
         return 0
     timeseries_list = response[u'timeSeries']
@@ -294,12 +294,15 @@ def format_metric_lists(starts_with):
 
         for s in sorted(SERVICE_SET[g]):
             gs = '{0}/{1}'.format(g, s)
+            # Write heading for service.
             # Custom metrics can have s==''; use 'none' for titles and tags.
             s_tag = s if s else 'none'
             print '\n### `{0}` {1}'.format(s_tag, tag_def(g + '-' + s_tag))
-            print '\nMetrics prefixed with `{0}/`:'.format(get_path_prefix(g, s))
-            print '\n<br/>Metric type  |  Name<br/>Kind, Type, Unit | Description<br/>Labels'
-            print '------------------- | -------------------------- | ----------------------'
+            print ('\nThe following metric types are prefixed with `{0}/`:'
+                   .format(get_path_prefix(g, s)))
+
+            print '\nMetric type<br/>Display name<br/>Kind, Type, Unit | Description<br/>Labels'
+            print '--------------------------------------------------- | ----------------------'
             # For each metric in the group+service:
             for metric_path in sorted(METRIC_DICT[gs]):
                 metric_descriptor = METRIC_DICT[gs][metric_path]
@@ -309,19 +312,24 @@ def format_metric_lists(starts_with):
                 value_type = metric_descriptor.get(u'valueType')
                 unit = metric_descriptor.get(u'unit')
                 description = metric_descriptor.get(u'description')
+                # Add a period to the end of the description if needed.
+                if description and description[-1] != '.':
+                    description += '.'
                 labels = metric_descriptor.get(u'labels', [])
                 formatted_label_list = []
                 for label in labels:
                     label_key = label[u'key']
                     label_description = label.get(u'description')
                     if not label_description:
-                        print >> sys.stderr, 'Metric "{0}", label "{1}" has no description.'.format(metric_type, label_key)
-                    formatted_label_type = '({0})'.format(label[u'valueType']) if u'valueType' in label else ''
+                        print >> sys.stderr, 'NO LABEL DESCRIPTION: metric "{0}", label "{1}".'.format(metric_type, label_key)
+                    # Omit the default label value type (string).
+                    label_type = label.get(u'valueType')
+                    formatted_label_type = '({0})'.format(label_type) if label_type else ''
                     formatted_label_list.append('`{0}`{1}: {2}'.format(label_key, formatted_label_type, label_description))
 
-                print '`{0}`<br/>{1}  |  {2}<br/>{3}, {4}, {5}  | {6}<br/>{7}'.format(
-                    metric_path,  '', display_name.encode('utf-8'),
-                    metric_kind.lower(), value_type.lower(), unit, description.encode('utf-8'),
+                print '`{0}`<br/>{1}<br/>`{2}`, `{3}`, {4}  | {5}<br/>{6}'.format(
+                    metric_path, display_name.encode('utf-8'),
+                    metric_kind, value_type, unit, description.encode('utf-8'),
                     "<br/>".join(formatted_label_list))
     print PAGE_SUFFIX
 

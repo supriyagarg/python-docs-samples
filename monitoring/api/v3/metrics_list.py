@@ -262,12 +262,14 @@ PAGE_PREFIX="""{% extends "monitoring/_base.html" %}
 {% setvar feature_disclaimer %}{{ product_name }}{% endsetvar %}
 {% include "cloud/_shared/_notice_beta.html" %}
 
-This page lists the metrics available in {{product_name_short}}.  For an
-introduction to metrics, metric naming, and metric labels, see
-[Metrics](/monitoring/api/v3/metrics).  To use the {{api_name_short}} to browse
-metrics, retrieve metric data, and create custom metrics, see [Using
-Metrics](/monitoring/api/v3/using-metrics)
+This page lists the metrics available in {{product_name_short}}.  The
+fields listed for each metric are defined in the
+[`MetricDescriptor` object](/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors).
 
+For an introduction to metrics, metric naming, and metric labels, see
+[Metrics and Time Series](/monitoring/api/v3/metrics).  To use the
+{{api_name_short}} to browse metrics, retrieve metric data, and create
+custom metrics, see [Using Metrics](/monitoring/api/v3/using-metrics).
 """
 
 PAGE_SUFFIX="""
